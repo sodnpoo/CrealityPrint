@@ -802,6 +802,7 @@ public:
     const bool get_dark_mode_status() { return m_is_dark; }
     void       set_as_dirty();
     void       requires_check_outside_state() { m_requires_check_outside_state = true; }
+    void       clear_framebuffer();
 
     unsigned int                   get_volumes_count() const;
     const GLVolumeCollection&      get_volumes() const { return m_volumes; }

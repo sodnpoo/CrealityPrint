@@ -1099,13 +1099,15 @@ int CLI::run(int argc, char **argv)
     save_main_thread_id();
 
 #ifdef __WXGTK__
-    // On Linux, wxGTK has no support for Wayland, and the app crashes on
-    // startup if gtk3 is used. This env var has to be set explicitly to
-    // instruct the window manager to fall back to X server mode.
-    ::setenv("GDK_BACKEND", "x11", /* replace */ true);
+    // Allow native Wayland when available (GTK3 + wxUSE_GLCANVAS_EGL).
+    // Force X11/XWayland only when the user explicitly requests it via
+    // CREALITY_FORCE_X11=1, or when running under a pure X11 session.
+    if (::getenv("CREALITY_FORCE_X11")) {
+        ::setenv("GDK_BACKEND", "x11", /* replace */ true);
+    }
 
-    // Also on Linux, we need to tell Xlib that we will be using threads,
-    // lest we crash when we fire up GStreamer.
+    // XInitThreads is still required: GStreamer may initialise Xlib internally
+    // (e.g. for X11 video sinks) even in Wayland sessions.
     XInitThreads();
 #endif
 

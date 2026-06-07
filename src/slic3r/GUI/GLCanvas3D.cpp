@@ -1508,6 +1508,19 @@ void GLCanvas3D::set_as_dirty()
     wxWakeUpIdle();
 }
 
+void GLCanvas3D::clear_framebuffer()
+{
+    // On Wayland, each wxGLCanvas has an independent wl_surface (wl_subsurface).
+    // Hiding the GTK widget does not clear the last committed EGL buffer, so the
+    // stale frame stays visible on top of other content. Commit a transparent
+    // buffer to make the surface visually invisible before hiding the panel.
+    if (!m_initialized || !m_canvas) return;
+    if (!_set_current()) return;
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    m_canvas->SwapBuffers();
+}
+
 const float GLCanvas3D::get_scale() const
 {
     float sc = 1;

@@ -3450,6 +3450,24 @@ Plater::priv::priv(Plater* q, MainFrame* main_frame)
             this->update_restart_background_process(false, false);
     });
 
+#ifdef __WXGTK3__
+    // On Wayland+EGL, GL canvas wl_subsurfaces are independent Wayland surfaces.
+    // When the Plater panel is hidden (e.g. switching to Online Models/Device tab),
+    // the active canvas's last committed EGL buffer stays visible. Commit a
+    // transparent buffer to clear it.
+    this->q->Bind(wxEVT_SHOW, [this](wxShowEvent& evt) {
+        if (!evt.IsShown()) {
+            GLCanvas3D* active = nullptr;
+            if (current_panel == view3D)             active = view3D->get_canvas3d();
+            else if (current_panel == preview)       active = preview->get_canvas3d();
+            else if (current_panel == assemble_view) active = assemble_view->get_canvas3d();
+            if (active) active->clear_framebuffer();
+        }
+        evt.Skip();
+    });
+#endif
+
+
     update();
 
     sidebar_printer = new SidebarPrinter(q);
@@ -7831,9 +7849,9 @@ void Plater::priv::set_current_panel(wxPanel* panel, bool no_slice)
         return;
 
     BOOST_LOG_TRIVIAL(info) << __FUNCTION__ << boost::format(": current_panel %1%, new_panel %2%") % current_panel % panel;
-#ifdef __WXMAC__
+#if defined(__WXMAC__) || defined(__WXGTK3__)
     bool force_render = (current_panel != nullptr);
-#endif // __WXMAC__
+#endif // __WXMAC__ || __WXGTK3__
 
     // BBS: add slice logic when switch to preview page
     auto do_reslice = [this, no_slice]() {
@@ -7948,22 +7966,38 @@ void Plater::priv::set_current_panel(wxPanel* panel, bool no_slice)
     // to reduce flickering when changing view, first set as visible the new current panel
     for (wxPanel* p : panels) {
         if (p == current_panel) {
-#ifdef __WXMAC__
-            // On Mac we need also to force a render to avoid flickering when changing view
+#if defined(__WXMAC__) || defined(__WXGTK3__)
+            // On Mac and Wayland (GTK3+EGL), IsShownOnScreen() is unreliable immediately
+            // after Show(), so _refresh_if_shown_on_screen() would skip the render.
+            // Call render() directly to avoid a frozen/stale frame on tab switch.
             if (force_render) {
                 if (p == view3D)
                     dynamic_cast<View3D*>(p)->get_canvas3d()->render();
                 else if (p == preview)
                     dynamic_cast<Preview*>(p)->get_canvas3d()->render();
+                else if (p == assemble_view)
+                    dynamic_cast<AssembleView*>(p)->get_canvas3d()->render();
             }
-#endif // __WXMAC__
+#endif // __WXMAC__ || __WXGTK3__
             p->Show();
         }
     }
     // then set to invisible the other
     for (wxPanel* p : panels) {
-        if (p != current_panel)
+        if (p != current_panel) {
+#if defined(__WXGTK3__)
+            // On Wayland+EGL each canvas has an independent wl_subsurface.
+            // Hiding the GTK panel does not clear its last committed EGL buffer,
+            // so the stale frame would remain visible. Commit a transparent buffer
+            // first to make the surface invisible before hiding the panel.
+            GLCanvas3D* c3d = nullptr;
+            if (p == view3D)             c3d = view3D->get_canvas3d();
+            else if (p == preview)       c3d = preview->get_canvas3d();
+            else if (p == assemble_view) c3d = assemble_view->get_canvas3d();
+            if (c3d) c3d->clear_framebuffer();
+#endif
             p->Hide();
+        }
     }
 
     update_sidebar(false, true);
@@ -8041,6 +8075,8 @@ void Plater::priv::set_current_panel(wxPanel* panel, bool no_slice)
                 do_reslice();
         }
 
+        // sets the canvas as dirty to force a render at the 1st idle event
+        preview->set_as_dirty();
         // reset cached size to force a resize on next call to render() to keep imgui in synch with canvas size
         preview->get_canvas3d()->reset_old_size();
         // BBS

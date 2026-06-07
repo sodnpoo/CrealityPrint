@@ -1,0 +1,16 @@
+--- a/src/unix/glegl.cpp
++++ b/src/unix/glegl.cpp
+@@ -497,6 +497,14 @@ bool wxGLCanvasEGL::CreateSurface()
+         m_wlEGLWindow = wl_egl_window_create(m_wlSurface, w * scale,
+                                              h * scale);
+         m_surface = eglCreatePlatformWindowSurface(m_display, *m_config,
+                                                    m_wlEGLWindow, NULL);
++        // The subsurface is in desync mode and the display was already
++        // round-tripped above, so buffer commits are safe immediately.
++        // Canvases hidden at startup never receive the parent frame callback,
++        // leaving m_readyToDraw=false permanently — making SwapBuffers() a
++        // silent no-op forever. Set it true here so all canvases can render.
++        m_readyToDraw = true;
+         m_wlFrameCallbackHandler = wl_surface_frame(surface);
+         wl_callback_add_listener(m_wlFrameCallbackHandler,
+                                  &wl_frame_listener, this);
