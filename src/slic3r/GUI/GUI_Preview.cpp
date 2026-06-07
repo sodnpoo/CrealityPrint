@@ -671,7 +671,7 @@ void Preview::load_print_as_fff(bool keep_z_range, bool only_gcode)
     // populated and we know the number of layers)
     bool has_layers = false;
     //BBS: always load shell at preview
-    load_shells(*print, true);
+    load_shells(*print, false);
     BOOST_LOG_TRIVIAL(debug) << __FUNCTION__ << boost::format(" %1%: print: %2%, gcode_result %3%, check started")%__LINE__ %print %m_gcode_result;
     BOOST_LOG_TRIVIAL(info) << __FUNCTION__ << boost::format(" %1%: print is step done, posSlice %2%, posSupportMaterial %3%, psGCodeExport %4%") % __LINE__ % print->is_step_done(posSlice) %print->is_step_done(posSupportMaterial) % print->is_step_done(psGCodeExport);
     if (print->is_step_done(posSlice)) {
@@ -741,31 +741,7 @@ void Preview::load_print_as_fff(bool keep_z_range, bool only_gcode)
             // import gcode file, preview using normal mode (no lite mode)
             bool is_lite_mode = wxGetApp().app_config->get_bool("gcode_preview_lite_mode") && (!only_gcode);
 
-            // Auto enable lite mode on Linux if memory is tight or preview is huge
-            // This does NOT affect Windows and does not persist the setting.
-#if defined(__linux__)
-            {
-                size_t avail_bytes = Slic3r::available_physical_memory();
-                size_t total_bytes = Slic3r::total_physical_memory();
-                const size_t moves_count = m_gcode_result ? m_gcode_result->moves.size() : 0;
 
-                // Heuristics:
-                // - Consider memory tight if available < 2 GB or available < 12.5% of total.
-                // - Consider preview huge if moves exceed 2 million.
-                const size_t avail_threshold_bytes = size_t(2) * size_t(1024) * size_t(1024) * size_t(1024); // 2 GB
-                const bool low_available = (avail_bytes > 0 && avail_bytes < avail_threshold_bytes);
-                const bool low_ratio     = (total_bytes > 0 && avail_bytes > 0 && (double)avail_bytes / (double)total_bytes < 0.125);
-                const bool huge_preview  = (moves_count > 2000000);
-
-                if (!only_gcode && (low_available || low_ratio || huge_preview)) {
-                    is_lite_mode = true;
-                    // Also enable shell-only surface rendering to further reduce load.
-                    if (m_gcode_result) {
-                        m_gcode_result->all_surface_with_shell = true;
-                    }
-                }
-            }
-#endif
             std::vector<std::pair<EMoveType, size_t>> changed_tmp;
             GCodeProcessorResult* tmp_result = nullptr;
             if (is_lite_mode) {
@@ -798,9 +774,6 @@ void Preview::load_print_as_fff(bool keep_z_range, bool only_gcode)
             //BBS show sliders
             show_moves_sliders();
 
-            //Orca: keep shell preview on but make it more transparent
-            m_canvas->set_shells_on_previewing(true);
-            m_canvas->set_shell_transparence();
             Refresh();
             zs = m_canvas->get_gcode_layers_zs();
             //BBS: add m_loaded_print logic

@@ -1363,11 +1363,13 @@ void GCodeViewer::load(const GCodeProcessorResult& gcode_result, const Print& pr
     system_memory_stats(__FUNCTION__);
     m_is_belt = gcode_result.machine_is_belt;
 
-    // avoid processing if called with the same gcode_result
-    if (m_last_result_id == gcode_result.id) {
-        //BBS: add logs
-        BOOST_LOG_TRIVIAL(info) << __FUNCTION__ << boost::format(": the same id %1%, return directly, result %2% ") % m_last_result_id % (&gcode_result);
-        return;
+    // avoid processing if called with the same gcode_result and same lite mode state
+    {
+        const bool new_lite_mode = wxGetApp().app_config->get_bool("gcode_preview_lite_mode") && !m_only_gcode_in_preview;
+        if (m_last_result_id == gcode_result.id && m_is_lite_mode == new_lite_mode) {
+            BOOST_LOG_TRIVIAL(info) << __FUNCTION__ << boost::format(": the same id %1%, return directly, result %2% ") % m_last_result_id % (&gcode_result);
+            return;
+        }
     }
 
     ResGuard res([&]
@@ -2878,21 +2880,6 @@ void GCodeViewer::load_toolpaths(const GCodeProcessorResult& gcode_result, const
     // Import gcode file, preview using normal mode (no lite mode)
     bool is_lite_mode_cfg = (wxGetApp().app_config->get_bool("gcode_preview_lite_mode") && (!m_only_gcode_in_preview));
 
-    // Auto enable lite mode on Linux if memory is tight or preview is huge.
-#if defined(__linux__)
-    {
-        size_t avail_bytes = Slic3r::available_physical_memory();
-        size_t total_bytes = Slic3r::total_physical_memory();
-        const size_t moves_count_local = gcode_result.moves.size();
-        const size_t avail_threshold_bytes = size_t(2) * size_t(1024) * size_t(1024) * size_t(1024); // 2 GB
-        const bool low_available = (avail_bytes > 0 && avail_bytes < avail_threshold_bytes);
-        const bool low_ratio     = (total_bytes > 0 && avail_bytes > 0 && (double)avail_bytes / (double)total_bytes < 0.125);
-        const bool huge_preview  = (moves_count_local > 2000000);
-        if (!m_only_gcode_in_preview && (low_available || low_ratio || huge_preview))
-            is_lite_mode_cfg = true;
-    }
-#endif
-
     const bool is_lite_mode = m_is_lite_mode = is_lite_mode_cfg;
 
     unsigned int progress_count = 0;
@@ -4036,7 +4023,7 @@ void GCodeViewer::load_shells(const Print& print, bool initialized, bool force_p
     //BBS: always load shell when preview
     m_shells.print_id = print.id().id;
     m_shells.print_modify_count = print.get_modified_count();
-    m_shells.previewing = true;
+    m_shells.previewing = false;
     BOOST_LOG_TRIVIAL(debug) << __FUNCTION__ << boost::format(": shell loaded, id change to %1%, modify_count %2%, object count %3%, glvolume count %4%")
         % m_shells.print_id % m_shells.print_modify_count % object_count %m_shells.volumes.volumes.size();
 }
@@ -7235,7 +7222,7 @@ void GCodeViewer::render(int canvas_width, int canvas_height)
                         if (toggled) {
                             bool k = !is_lite_mode;
                             wxGetApp().app_config->set("gcode_preview_lite_mode", (k ? "true" : "false"));
-                            wxGetApp().plater()->invalid_slice_result_need_reslice();
+                            wxGetApp().plater()->refresh_print();
                         }
 
 

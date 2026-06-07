@@ -1502,7 +1502,11 @@ void GLCanvas3D::on_change_color_mode(bool is_dark, bool reinit)
     }
 }
 
-void GLCanvas3D::set_as_dirty() { m_dirty = true; }
+void GLCanvas3D::set_as_dirty()
+{
+    m_dirty = true;
+    wxWakeUpIdle();
+}
 
 const float GLCanvas3D::get_scale() const
 {
@@ -3523,21 +3527,22 @@ void GLCanvas3D::on_idle(wxIdleEvent& evt)
 
     _refresh_if_shown_on_screen();
 
-#if ENABLE_ENHANCED_IMGUI_SLIDER_FLOAT
-    bool need_extra_frame = m_extra_frame_requested || (m_extra_frames_to_render > 0) || mouse3d_controller_applied ||
-                            imgui_requires_extra_frame || wxGetApp().imgui()->requires_extra_frame();
-#else
-    bool need_extra_frame = m_extra_frame_requested || (m_extra_frames_to_render > 0) || mouse3d_controller_applied;
-#endif // ENABLE_ENHANCED_IMGUI_SLIDER_FLOAT
+    m_dirty = false;
 
-    if (need_extra_frame) {
-        m_dirty               = true;
+    if (m_extra_frame_requested) {
         m_extra_frame_requested = false;
-        if (m_extra_frames_to_render > 0)
-            --m_extra_frames_to_render;
-        evt.RequestMore();
-    } else
-        m_dirty = false;
+        schedule_extra_frame(0);
+    }
+    if (m_extra_frames_to_render > 0) {
+        --m_extra_frames_to_render;
+        schedule_extra_frame(0);
+    }
+    if (mouse3d_controller_applied)
+        schedule_extra_frame(0);
+#if ENABLE_ENHANCED_IMGUI_SLIDER_FLOAT
+    if (imgui_requires_extra_frame || wxGetApp().imgui()->requires_extra_frame())
+        schedule_extra_frame(0);
+#endif
 }
 
 void GLCanvas3D::on_char(wxKeyEvent& evt)
@@ -4031,16 +4036,22 @@ void GLCanvas3D::on_key(wxKeyEvent& evt)
     const int keyCode = evt.GetKeyCode();
 
     auto imgui = wxGetApp().imgui();
+
+    // Handle global shortcuts before ImGui can capture the key event.
+    // If ImGui has focus, update_key_data() would consume the event and our else-branch would never run.
+    if (evt.GetEventType() == wxEVT_KEY_UP && evt.ShiftDown() && evt.ControlDown() && keyCode == WXK_SPACE) {
+        wxGetApp().plater()->toggle_render_statistic_dialog();
+        m_dirty = true;
+        wxWakeUpIdle();
+    }
+
     if (imgui->update_key_data(evt)) {
         render();
     } else {
         if (!m_gizmos.on_key(evt)) {
             if (evt.GetEventType() == wxEVT_KEY_UP) {
                 if (evt.ShiftDown() && evt.ControlDown() && keyCode == WXK_SPACE) {
-#if !BBL_RELEASE_TO_PUBLIC
-                    wxGetApp().plater()->toggle_render_statistic_dialog();
-                    m_dirty = true;
-#endif
+                    // Already handled above before ImGui, nothing to do here.
                 } else if ((evt.ShiftDown() && evt.ControlDown() && keyCode == WXK_RETURN) ||
                            evt.ShiftDown() && evt.AltDown() && keyCode == WXK_RETURN) {
                     wxGetApp().plater()->toggle_show_wireframe();
@@ -4392,10 +4403,9 @@ void GLCanvas3D::on_timer(wxTimerEvent& evt)
 
 void GLCanvas3D::on_render_timer(wxTimerEvent& evt)
 {
-    // no need to wake up idle
-    // right after this event, idle event is fired
-    // m_dirty = true;
-    // wxWakeUpIdle();
+    // wxWidgets fires idle automatically after this event completes.
+    // We only need to ensure the dirty flag is set so on_idle doesn't return early.
+    m_dirty = true;
 }
 
 void GLCanvas3D::on_set_color_timer(wxTimerEvent& evt)
@@ -5196,6 +5206,13 @@ void GLCanvas3D::on_mouse(wxMouseEvent& evt)
 
     if (m_moving)
         show_sinking_contours();
+
+    // Render immediately for zero-latency response to drag/hover events.
+    // Clear dirty so on_idle only re-renders if toolbar/notification state actually changed.
+    if (m_dirty) {
+        render();
+        m_dirty = false;
+    }
 
 #ifdef __WXMSW__
     if (on_enter_workaround)

@@ -578,8 +578,8 @@ private:
     std::string                  m_sidebar_field;
     // when true renders an extra frame by not resetting m_dirty to false
     // see request_extra_frame()
-    bool m_extra_frame_requested;
-    int  m_extra_frames_to_render{0};
+    bool    m_extra_frame_requested;
+    int     m_extra_frames_to_render{0};
     bool m_event_handlers_bound{false};
 
     GCodeViewer        m_gcode_viewer;
