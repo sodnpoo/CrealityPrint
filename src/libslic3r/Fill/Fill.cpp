@@ -87,6 +87,11 @@ struct SurfaceFillParams
     // Params for Lateral honeycomb
     float infill_overhang_angle = 45.f;
 
+    // Params for Single Line infill
+    float single_line_angle     = 0.f;
+    float single_line_offset_x  = 0.f;
+    float single_line_offset_y  = 0.f;
+
 	bool operator<(const SurfaceFillParams &rhs) const {
 #define RETURN_COMPARE_NON_EQUAL(KEY) if (this->KEY < rhs.KEY) return true; if (this->KEY > rhs.KEY) return false;
 #define RETURN_COMPARE_NON_EQUAL_TYPED(TYPE, KEY) if (TYPE(this->KEY) < TYPE(rhs.KEY)) return true; if (TYPE(this->KEY) > TYPE(rhs.KEY)) return false;
@@ -124,6 +129,9 @@ struct SurfaceFillParams
         RETURN_COMPARE_NON_EQUAL(infill_overhang_angle);
         RETURN_COMPARE_NON_EQUAL_TYPED(unsigned, skin_pattern);
         RETURN_COMPARE_NON_EQUAL_TYPED(unsigned, skeleton_pattern);
+        RETURN_COMPARE_NON_EQUAL(single_line_angle);
+        RETURN_COMPARE_NON_EQUAL(single_line_offset_x);
+        RETURN_COMPARE_NON_EQUAL(single_line_offset_y);
 		return false;
 	}
 
@@ -154,7 +162,10 @@ struct SurfaceFillParams
 				this->skin_infill_depth      ==  rhs.skin_infill_depth &&
                 this->infill_overhang_angle == rhs.infill_overhang_angle &&
                 this->skin_pattern == rhs.skin_pattern &&
-                this->skeleton_pattern == rhs.skeleton_pattern;
+                this->skeleton_pattern == rhs.skeleton_pattern &&
+                this->single_line_angle     == rhs.single_line_angle &&
+                this->single_line_offset_x  == rhs.single_line_offset_x &&
+                this->single_line_offset_y  == rhs.single_line_offset_y;
 	}
 };
 
@@ -680,6 +691,9 @@ std::vector<SurfaceFill> group_fills(const Layer &layer, LockRegionParam &lock_p
                 params.lateral_lattice_angle_1 = region_config.lateral_lattice_angle_1;
                 params.lateral_lattice_angle_2 = region_config.lateral_lattice_angle_2;
                 params.infill_overhang_angle = region_config.infill_overhang_angle;
+                params.single_line_angle    = region_config.single_line_infill_angle;
+                params.single_line_offset_x = region_config.single_line_infill_offset_x;
+                params.single_line_offset_y = region_config.single_line_infill_offset_y;
                 params.angle        = 0.;
                 if (params.pattern == ipLockedZag) {
                     params.infill_lock_depth = scale_(region_config.infill_lock_depth);
@@ -1094,7 +1108,10 @@ void Layer::make_fills(FillAdaptive::Octree* adaptive_fill_octree, FillAdaptive:
         params.layer_height      = layerm->layer()->height;
         params.lateral_lattice_angle_1   = surface_fill.params.lateral_lattice_angle_1;
         params.lateral_lattice_angle_2   = surface_fill.params.lateral_lattice_angle_2;
-        params.infill_overhang_angle   = surface_fill.params.infill_overhang_angle;
+        params.infill_overhang_angle     = surface_fill.params.infill_overhang_angle;
+        params.single_line_angle         = surface_fill.params.single_line_angle;
+        params.single_line_offset_x      = surface_fill.params.single_line_offset_x;
+        params.single_line_offset_y      = surface_fill.params.single_line_offset_y;
 
 		// BBS
 		params.flow = surface_fill.params.flow;
@@ -1460,8 +1477,11 @@ Polylines Layer::generate_sparse_infill_polylines_for_anchoring(FillAdaptive::Oc
         params.layer_height      = layerm.layer()->height;
         params.lateral_lattice_angle_1   = surface_fill.params.lateral_lattice_angle_1;
         params.lateral_lattice_angle_2   = surface_fill.params.lateral_lattice_angle_2;
-        params.infill_overhang_angle   = surface_fill.params.infill_overhang_angle;
-        params.multiline         = surface_fill.params.multiline;
+        params.infill_overhang_angle     = surface_fill.params.infill_overhang_angle;
+        params.single_line_angle         = surface_fill.params.single_line_angle;
+        params.single_line_offset_x      = surface_fill.params.single_line_offset_x;
+        params.single_line_offset_y      = surface_fill.params.single_line_offset_y;
+        params.multiline                 = surface_fill.params.multiline;
 
         for (ExPolygon &expoly : surface_fill.expolygons) {
             // Spacing is modified by the filler to indicate adjustments. Reset it for each expolygon.

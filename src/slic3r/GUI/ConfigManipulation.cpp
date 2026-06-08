@@ -629,6 +629,10 @@ void ConfigManipulation::toggle_print_fff_options(DynamicPrintConfig *config, co
     for (auto el : { "lateral_lattice_angle_1", "lateral_lattice_angle_2"})
         toggle_line(el, lattice_options);
 
+    bool single_line_options = config->opt_enum<InfillPattern>("sparse_infill_pattern") == InfillPattern::ipSingleLine;
+    for (auto el : { "single_line_infill_angle", "single_line_infill_offset_x", "single_line_infill_offset_y"})
+        toggle_line(el, single_line_options);
+
     //Orca: hide rotate template for solid infill if not support
     const auto _sparse_infill_pattern = config->option<ConfigOptionEnum<InfillPattern>>("sparse_infill_pattern")->value;
     //bool       show_sparse_infill_rotate_template = _sparse_infill_pattern == ipRectilinear || _sparse_infill_pattern == ipLine ||

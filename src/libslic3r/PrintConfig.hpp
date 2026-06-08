@@ -106,8 +106,9 @@ enum InfillPattern : int {
     ipZigZag,
     ipCrossZag,
     ipLockedZag,
-    ipLateralHoneycomb, 
+    ipLateralHoneycomb,
     ipLateralLattice,
+    ipSingleLine,
     //no use
     ipMonotonic,
     ipMonotonicLine,     
@@ -1034,6 +1035,9 @@ PRINT_CONFIG_CLASS_DEFINE(
     ((ConfigOptionFloat,                lateral_lattice_angle_1))
     ((ConfigOptionFloat,                lateral_lattice_angle_2))
     ((ConfigOptionFloat,                infill_overhang_angle))
+    ((ConfigOptionFloat,                single_line_infill_angle))
+    ((ConfigOptionFloat,                single_line_infill_offset_x))
+    ((ConfigOptionFloat,                single_line_infill_offset_y))
     ((ConfigOptionBool,                 align_infill_direction_to_model))
     ((ConfigOptionEnum<FuzzySkinType>,  fuzzy_skin))
     ((ConfigOptionFloat,                fuzzy_skin_thickness))

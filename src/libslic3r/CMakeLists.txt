@@ -126,6 +126,8 @@ set(lisbslic3r_sources
     Fill/FillPlanePath.hpp
     Fill/FillLine.cpp
     Fill/FillLine.hpp
+    Fill/FillSingleLine.cpp
+    Fill/FillSingleLine.hpp
     Fill/FillLightning.cpp
     Fill/FillLightning.hpp
     Fill/Lightning/DistanceField.cpp

@@ -194,7 +194,7 @@ static t_config_enum_values s_keys_map_InfillPattern {
     { "locked-zag", ipLockedZag },
     { "lateral-lattice", ipLateralLattice },
     { "lateral-honeycomb", ipLateralHoneycomb },
-
+    { "single-line",       ipSingleLine },
 };
 CONFIG_OPTION_ENUM_DEFINE_STATIC_MAPS(InfillPattern)
 
@@ -2500,7 +2500,8 @@ void PrintConfigDef::init_fff_params()
     def->enum_values.push_back("locked-zag");
     def->enum_values.push_back("lateral-honeycomb");
     def->enum_values.push_back("lateral-lattice");
-    
+    def->enum_values.push_back("single-line");
+
     def->enum_labels.push_back(L("Concentric"));
     def->enum_labels.push_back(L("Rectilinear"));
     def->enum_labels.push_back(L("Grid"));
@@ -2533,6 +2534,7 @@ void PrintConfigDef::init_fff_params()
     def->enum_labels.push_back(L("Locked-Zag"));
     def->enum_labels.push_back(L("Lateral Honeycomb"));
     def->enum_labels.push_back(L("Lateral Lattice"));
+    def->enum_labels.push_back(L("Single Line"));
 	def->set_default_value(new ConfigOptionEnum<InfillPattern>(ipGrid));
 
     
@@ -2653,6 +2655,32 @@ void PrintConfigDef::init_fff_params()
     def->max      = 75;
     def->mode     = comAdvanced;
     def->set_default_value(new ConfigOptionFloat(45));
+
+    def           = this->add("single_line_infill_angle", coFloat);
+    def->label    = L("Single line infill angle");
+    def->category = L("Strength");
+    def->tooltip  = L("Angle of the single line infill, in degrees. 0 = horizontal, 90 = vertical.");
+    def->sidetext = "°";
+    def->min      = 0;
+    def->max      = 360;
+    def->mode     = comAdvanced;
+    def->set_default_value(new ConfigOptionFloat(0));
+
+    def           = this->add("single_line_infill_offset_x", coFloat);
+    def->label    = L("Single line infill X offset");
+    def->category = L("Strength");
+    def->tooltip  = L("Horizontal offset of the single line infill from the object center, in mm.");
+    def->sidetext = "mm";
+    def->mode     = comAdvanced;
+    def->set_default_value(new ConfigOptionFloat(0));
+
+    def           = this->add("single_line_infill_offset_y", coFloat);
+    def->label    = L("Single line infill Y offset");
+    def->category = L("Strength");
+    def->tooltip  = L("Vertical offset of the single line infill from the object center, in mm.");
+    def->sidetext = "mm";
+    def->mode     = comAdvanced;
+    def->set_default_value(new ConfigOptionFloat(0));
 
     auto def_infill_anchor_min = def = this->add("infill_anchor", coFloatOrPercent);
     def->label = L("Sparse infill anchor length");

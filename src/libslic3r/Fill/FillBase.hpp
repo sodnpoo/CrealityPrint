@@ -113,6 +113,11 @@ struct FillParams
     bool            locked_zag{false};
     float           infill_lock_depth{0.0};
     float           skin_infill_depth{0.0};
+
+    // For Single Line infill
+    float           single_line_angle{0.0};    // degrees
+    float           single_line_offset_x{0.0}; // mm
+    float           single_line_offset_y{0.0}; // mm
 };
 static_assert(IsTriviallyCopyable<FillParams>::value, "FillParams class is not POD (and it should be - see constructor).");
 

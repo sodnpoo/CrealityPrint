@@ -2662,6 +2662,9 @@ void TabPrint::build()
         optgroup->append_single_option_line("lateral_lattice_angle_1", "strength_settings_infill#2d-lattice");
         optgroup->append_single_option_line("lateral_lattice_angle_2", "strength_settings_infill#2d-lattice");
         optgroup->append_single_option_line("infill_overhang_angle", "strength_settings_infill#2d-honeycomb");
+        optgroup->append_single_option_line("single_line_infill_angle");
+        optgroup->append_single_option_line("single_line_infill_offset_x");
+        optgroup->append_single_option_line("single_line_infill_offset_y");
 
 
 
@@ -3201,7 +3204,8 @@ void TabPrint::toggle_options()
             ipLockedZag,
             ipLateralHoneycomb,
             ipLateralLattice,
-        }; 
+            ipSingleLine,
+        };
         auto& set2        = has_ai_infill ? enum_set_AI : enum_set_Normal;
         auto& opt2        = const_cast<ConfigOptionDef&>(field2->m_opt);
         auto  cb2         = dynamic_cast<ComboBox*>(choice2->window);
@@ -3219,7 +3223,10 @@ void TabPrint::toggle_options()
             for (auto i : set2) {
                 opt2.enum_values.push_back(def2->enum_values[i]);
                 opt2.enum_labels.push_back(def2->enum_labels[i]);
-                cb2->Append(_(def2->enum_labels[i]), cb2->icons_backup[i]);
+                wxBitmap icon = (i < (int)cb2->icons_backup.size())
+                    ? cb2->icons_backup[i]
+                    : (cb2->icons_backup.empty() ? wxNullBitmap : cb2->icons_backup[0]);
+                cb2->Append(_(def2->enum_labels[i]), icon);
             }
             bool pre_is_same = pre_count == opt2.enum_values.size();
             auto seln        = pre_is_same ? n2 : has_ai_infill ? 1 : opt2.enum_values.size() - 1;

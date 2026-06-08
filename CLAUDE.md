@@ -58,7 +58,9 @@ cmake -S . -B build -G Ninja \
     -DBBL_INTERNAL_TESTING=0 \
     -DUPDATE_ONLINE_MACHINES=1 \
     -DPROJECT_VERSION_EXTRA=Release \
-    -DCREALITYPRINT_VERSION=7.1.1.338337
+    -DCREALITYPRINT_VERSION=7.1.1.338337 \
+    -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+    -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 ```
 
 **`-DPROJECT_VERSION_EXTRA=Release`** — must be `Release` (not `Alpha`) so the app reads
@@ -77,11 +79,11 @@ you do not need to pass them again unless you wipe the build directory.
 ## Step 4 — Build
 
 ```bash
-cmake --build build --target CrealityPrint -- -j$(nproc)
+cmake --build build --target CrealityPrint -- -j2
 ```
 
-On memory-constrained machines (< 16 GB RAM) use `-j2` or `-j4` to avoid OOM during LTO
-linking. The binary is produced at `build/src/CrealityPrint`.
+Use `-j2` to avoid OOM during linking. ccache makes incremental rebuilds fast regardless of
+job count. The binary is produced at `build/src/CrealityPrint`.
 
 ---
 

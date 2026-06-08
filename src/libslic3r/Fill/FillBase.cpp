@@ -31,6 +31,7 @@
 // BBS: new infill pattern header
 #include "FillConcentricInternal.hpp"
 #include "FillCrossHatch.hpp"
+#include "FillSingleLine.hpp"
 #include "FillTpmsD.hpp"
 #include "FillTpmsGradual.hpp"
 
@@ -92,6 +93,7 @@ Fill* Fill::new_from_type(const InfillPattern type)
     case ipZigZag:              return new FillZigZag();
     case ipCrossZag:            return new FillCrossZag();
     case ipLockedZag:           return new FillLockedZag();
+    case ipSingleLine:          return new FillSingleLine();
     default: throw Slic3r::InvalidArgument("unknown type");
     }
 }
