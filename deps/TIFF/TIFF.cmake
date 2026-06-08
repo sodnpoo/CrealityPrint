@@ -26,6 +26,8 @@ else()
             -Dwebp:BOOL=OFF
             -Djbig:BOOL=OFF
             -Dzstd:BOOL=OFF
+            -Dlibdeflate:BOOL=OFF
+            -Dlerc:BOOL=OFF
             -Dpixarlog:BOOL=OFF
     )
 

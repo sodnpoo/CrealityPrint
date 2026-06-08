@@ -203,7 +203,7 @@ then
         ${BUILD_ARGS}
     echo "done"
     echo "Building CrealityPrint ..."
-    if [[ -n "${num_threads}" ]]; then
+    if [[ -n "${NUM_THREADS}" ]]; then
         cmake --build build --target CrealityPrint -j${NUM_THREADS}
     else
         cmake --build build --target CrealityPrint

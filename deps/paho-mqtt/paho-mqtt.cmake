@@ -1,7 +1,7 @@
 #set(patch_command git init && ${PATCH_CMD} ${CMAKE_CURRENT_LIST_DIR}/0001-fix-slicer-build.patch)
 set(_build_static ON)
 set(_build_with_ssl ON)
-if(LINUX)
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(_build_with_ssl OFF)
 endif()
 
