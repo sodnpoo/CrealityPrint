@@ -61,28 +61,27 @@ CxSentToPrinterDialog::CxSentToPrinterDialog(Plater *plater,
                 _L("Send to Lan Printer"),
                 wxDefaultPosition,
                 wxDefaultSize,
-                // Linux 下不需要最大/最小化按钮：移除可调尺寸边框
-                // 其他平台保持原行为（可调整大小）
-                #if defined(__linux__) || defined(__LINUX__) || defined(__WXGTK__)
-                wxCAPTION | wxCLOSE_BOX
-                #else
                 wxCAPTION | wxCLOSE_BOX | wxRESIZE_BORDER
-                #endif
                 ), m_sendtype(sendtype),m_mapString(mapString)
     , m_plater(plater)
 {
-    // 双保险：即使窗口管理器默认添加，也在 Linux 下移除最小/最大化按钮
-    #if defined(__linux__) || defined(__LINUX__) || defined(__WXGTK__)
     SetWindowStyleFlag(GetWindowStyleFlag() & ~(wxMINIMIZE_BOX | wxMAXIMIZE_BOX));
-    #endif
     #ifdef __WINDOWS__
     SetDoubleBuffered(true);
 #endif //__WINDOWS__
 
     wxGetApp().UpdateDlgDarkUI(this);
 
-    wxSize minSize = wxSize(FromDIP(1170), FromDIP(500)); // 设置最小尺寸
+    // On native Wayland (GTK3) the effective webview CSS viewport can be shorter
+    // than on X11/XWayland due to DPI detection and CSD overhead differences.
+    // Add 100px of height margin so the buttons are always visible.
+#if defined(__WXGTK__)
+    wxSize minSize     = wxSize(FromDIP(1170), FromDIP(600));
+    wxSize initialSize = wxSize(FromDIP(1170), FromDIP(750));
+#else
+    wxSize minSize     = wxSize(FromDIP(1170), FromDIP(500));
     wxSize initialSize = wxSize(FromDIP(1170), FromDIP(650));
+#endif
 
     SetMinSize(minSize);
     SetSize(initialSize);
@@ -92,11 +91,15 @@ CxSentToPrinterDialog::CxSentToPrinterDialog(Plater *plater,
             wxPoint position = GetPosition();
             if (position.y < 0 && abs(position.y)<20)
             {
+#if defined(__WXGTK__)
+                wxSize newSize = wxSize(FromDIP(1170), FromDIP(750) + position.y);
+#else
                 wxSize newSize = wxSize(FromDIP(1170), FromDIP(650) + position.y);
+#endif
                 SetSize(newSize);
                 SetPosition(wxPoint(position.x, GetParent()->GetPosition().y));
             }
-                
+
         }
         event.Skip();
     });
@@ -116,6 +119,13 @@ CxSentToPrinterDialog::CxSentToPrinterDialog(Plater *plater,
         wxLogError("Could not init m_browser");
         return;
     }
+
+#if defined(__WXGTK__)
+    // On native Wayland, WebKitGTK inherits the GTK DPI/scale factor and may
+    // apply it as a zoom level, making the CSS viewport shorter than designed.
+    // Force zoom to 1.0 so the layout matches the X11/XWayland behaviour.
+    m_browser->SetZoomFactor(1.0f);
+#endif
 
     bind_events();
 

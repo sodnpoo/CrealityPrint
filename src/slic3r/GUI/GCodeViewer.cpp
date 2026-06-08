@@ -4023,7 +4023,7 @@ void GCodeViewer::load_shells(const Print& print, bool initialized, bool force_p
     //BBS: always load shell when preview
     m_shells.print_id = print.id().id;
     m_shells.print_modify_count = print.get_modified_count();
-    m_shells.previewing = false;
+    m_shells.previewing = true;
     BOOST_LOG_TRIVIAL(debug) << __FUNCTION__ << boost::format(": shell loaded, id change to %1%, modify_count %2%, object count %3%, glvolume count %4%")
         % m_shells.print_id % m_shells.print_modify_count % object_count %m_shells.volumes.volumes.size();
 }

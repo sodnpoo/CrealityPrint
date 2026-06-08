@@ -774,6 +774,8 @@ void Preview::load_print_as_fff(bool keep_z_range, bool only_gcode)
             //BBS show sliders
             show_moves_sliders();
 
+            m_canvas->set_shells_on_previewing(true);
+            m_canvas->set_shell_transparence();
             Refresh();
             zs = m_canvas->get_gcode_layers_zs();
             //BBS: add m_loaded_print logic
