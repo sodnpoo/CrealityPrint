@@ -1038,6 +1038,7 @@ PRINT_CONFIG_CLASS_DEFINE(
     ((ConfigOptionFloat,                single_line_infill_angle))
     ((ConfigOptionFloat,                single_line_infill_offset_x))
     ((ConfigOptionFloat,                single_line_infill_offset_y))
+    ((ConfigOptionString,               extra_solid_infills))
     ((ConfigOptionBool,                 align_infill_direction_to_model))
     ((ConfigOptionEnum<FuzzySkinType>,  fuzzy_skin))
     ((ConfigOptionFloat,                fuzzy_skin_thickness))

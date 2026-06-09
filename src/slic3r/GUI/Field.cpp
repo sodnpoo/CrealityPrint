@@ -453,6 +453,18 @@ void Field::get_value_by_opt_type(wxString& str, const bool check_value/* = true
             }
         }
 
+        if (m_opt.opt_key == "extra_solid_infills") {
+            std::string ustr(str.utf8_string());
+            const std::regex rx_interval(u8R"(^\s*['"]?\s*\d+\s*(?:#\s*\d*)?\s*['"]?\s*$)");
+            const std::regex rx_list(u8R"(^\s*['"]?\s*\d+(?:\s*#\s*\d*)?(?:\s*,\s*\d+(?:\s*#\s*\d*)?)*\s*['"]?\s*$)");
+            bool valid = ustr.empty() || std::regex_match(ustr, rx_interval) || std::regex_match(ustr, rx_list);
+            if (!valid) {
+                show_error(m_parent, _L("Invalid pattern. Use N, N#K, or a comma-separated list with optional #K per entry. Examples: 5, 5#2, 1,7,9, 5,9#2,18."));
+                wxString old_value(boost::any_cast<std::string>(m_value));
+                this->set_value(old_value, true);
+            }
+        }
+
         m_value = into_u8(str);
 		break; }
     case coPoint:{

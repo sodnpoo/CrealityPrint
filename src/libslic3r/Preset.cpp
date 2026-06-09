@@ -867,6 +867,7 @@ static std::vector<std::string> s_Preset_print_options {
     "single_line_infill_angle",
     "single_line_infill_offset_x",
     "single_line_infill_offset_y",
+    "extra_solid_infills",
     "symmetric_infill_y_axis",
     "skeleton_infill_density",
     "infill_lock_depth",

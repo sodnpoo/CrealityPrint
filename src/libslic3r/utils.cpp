@@ -1741,4 +1741,76 @@ void stringReplace(std::string& strBase, const std::string strSrc, const std::st
     }
 }
 
+bool check_layer_id_pattern(const std::string& pattern, int layer_id)
+{
+    if (pattern.empty() || layer_id < 0)
+        return false;
+
+    // layer_id is 0-based; convert to 1-based for user-facing numbering
+    layer_id++;
+
+    // Strip whitespace and surrounding quotes
+    std::string p; p.reserve(pattern.size());
+    for (char c : pattern) {
+        if (c == ' ' || c == '\t' || c == '\n' || c == '\r')
+            continue;
+        p.push_back(c);
+    }
+    if (!p.empty() && (p.front() == '"' || p.front() == '\''))
+        p.erase(p.begin());
+    if (!p.empty() && (p.back() == '"' || p.back() == '\''))
+        p.pop_back();
+    if (p.empty())
+        return false;
+
+    // Explicit list form: "1,7,9" or with per-entry counts: "5,9#2,18"
+    if (p.find(',') != std::string::npos) {
+        size_t start = 0;
+        while (start < p.size()) {
+            size_t end = p.find(',', start);
+            std::string token = p.substr(start, (end == std::string::npos) ? std::string::npos : end - start);
+            if (!token.empty()) {
+                try {
+                    size_t hash_pos = token.find('#');
+                    if (hash_pos == std::string::npos) {
+                        if (std::stoi(token) == layer_id)
+                            return true;
+                    } else {
+                        int base  = std::stoi(token.substr(0, hash_pos));
+                        std::string cnt_str = token.substr(hash_pos + 1);
+                        int cnt = cnt_str.empty() ? 1 : std::stoi(cnt_str);
+                        if (base > 0 && cnt > 0 && layer_id >= base && layer_id < base + cnt)
+                            return true;
+                    }
+                } catch (...) {}
+            }
+            if (end == std::string::npos)
+                break;
+            start = end + 1;
+        }
+        return false;
+    }
+
+    // Interval form: "N" or "N#K"
+    int interval = 0, count = 1;
+    size_t hash_pos = p.find('#');
+    try {
+        if (hash_pos == std::string::npos) {
+            interval = std::stoi(p);
+        } else {
+            interval = std::stoi(p.substr(0, hash_pos));
+            std::string cnt_str = p.substr(hash_pos + 1);
+            if (!cnt_str.empty())
+                count = std::stoi(cnt_str);
+        }
+    } catch (...) {
+        return false;
+    }
+
+    if (interval <= 0 || count <= 0 || layer_id < interval)
+        return false;
+    int mod = layer_id % interval;
+    return mod >= 0 && mod < count;
+}
+
 }; // namespace Slic3r

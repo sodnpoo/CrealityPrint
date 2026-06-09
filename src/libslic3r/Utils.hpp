@@ -770,8 +770,12 @@ void load_string_file(const boost::filesystem::path& p, std::string& str);
 void stringReplace(std::string &strBase, const std::string strSrc, const std::string strDes);
 
 std::string trim(const std::string& s); 
-std::string toLower(const std::string& s); 
+std::string toLower(const std::string& s);
 bool isEqualAfterProcessing(const std::string& a, const std::string& b);
+
+// Returns true if layer_id (0-based) should have solid infill per the user pattern string.
+// Pattern syntax: N, N#K, or a comma-separated list of those (see PrintConfig "extra_solid_infills").
+bool check_layer_id_pattern(const std::string &pattern, int layer_id);
 
 } // namespace Slic3r
 

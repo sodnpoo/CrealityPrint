@@ -2665,6 +2665,7 @@ void TabPrint::build()
         optgroup->append_single_option_line("single_line_infill_angle");
         optgroup->append_single_option_line("single_line_infill_offset_x");
         optgroup->append_single_option_line("single_line_infill_offset_y");
+        optgroup->append_single_option_line("extra_solid_infills");
 
 
 
