@@ -8332,14 +8332,21 @@ std::string GCode::_extrude(const ExtrusionPath &path, std::string description, 
         }       
     }
 
-    // Surface modifier speed override. Only painted paths are overridden; unpainted
-    // walls keep their normally-computed speed. Zone membership is pre-computed during
-    // make_perimeters() and stored on the path, so no coordinate work needed here.
+    // Surface modifier speed override. Painted walls are capped at the painted speed:
+    // each point uses the slower of its normal/overhang speed and the painted speed, so
+    // painting slows the wall but never speeds an overhang up past its own slowdown.
+    // Caps both the scalar speed (classic / no-overhang emission) and every variable-
+    // speed point (dynamic overhang). Overhang paths carry perimeter_index (0 = external)
+    // to distinguish the outer wall from inner walls. Zone membership is pre-computed in
+    // make_perimeters() and stored on the path, so no coordinate work is needed here.
     if (path.surface_modifier_zone) {
-        if (path.role() == erExternalPerimeter)
-            speed = m_config.surface_modifier_outer_speed.value;
-        else if (path.role() == erPerimeter)
-            speed = m_config.surface_modifier_inner_speed.value;
+        const bool is_outer = is_external_perimeter(path.role()) ||
+            (path.role() == erOverhangPerimeter && path.perimeter_index.value_or(0) == 0);
+        const double painted = is_outer ? m_config.surface_modifier_outer_speed.value
+                                        : m_config.surface_modifier_inner_speed.value;
+        speed = std::min(speed, painted);
+        for (ProcessedPoint &pp : new_points)
+            pp.speed = std::min(pp.speed, float(painted));
     }
 
     double F = speed * 60;  // convert mm/sec to mm/min

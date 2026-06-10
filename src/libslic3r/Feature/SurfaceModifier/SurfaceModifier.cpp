@@ -73,9 +73,10 @@ size_t apply_speed_zones(LayerRegionPtrs &regions, const ExPolygons &painted_zon
 
     size_t painted_subpaths = 0;
 
-    // Outer and inner walls are the roles overridden by the G-code speed hook.
+    // All perimeter roles are overridden by the G-code speed hook, including
+    // overhang sections so the painted speed applies across overhangs too.
     const auto is_target_wall = [](ExtrusionRole role) {
-        return is_external_perimeter(role) || is_internal_perimeter(role);
+        return is_perimeter(role);
     };
 
     // A LayerRegion's perimeters collection is NOT a flat list of loops: it holds
