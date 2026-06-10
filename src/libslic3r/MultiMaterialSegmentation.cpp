@@ -2375,14 +2375,25 @@ std::vector<std::vector<ExPolygons>> surface_modifier_segmentation_by_painting(c
         return {mv.surface_modifier_facets, mv.is_surface_modifier_painted(), false};
     };
 
-    // Use a small depth so the painted region projects onto the surface shell only.
-    float max_external_perimeter_width = 0.;
+    // Project the painted region inward deep enough to reach every wall. The band
+    // is trimmed by cut_segmented_layers() to within `max_depth` of the surface.
+    // The wall stack runs: outer perimeter (centerline ~external_width/2 from the
+    // surface) followed by (wall_loops-1) inner perimeters each spaced inner_spacing
+    // apart. external_width + (wall_loops-1)*inner_spacing + inner_width reaches past
+    // the innermost wall centerline with margin. Over-projection is harmless: only
+    // perimeter paths are flagged downstream.
+    const float layer_height = print_object.config().layer_height;
+    float max_depth = 0.;
     for (size_t region_idx = 0; region_idx < print_object.num_printing_regions(); ++region_idx) {
-        const PrintRegion &region = print_object.printing_region(region_idx);
-        max_external_perimeter_width = std::max<float>(max_external_perimeter_width, region.flow(print_object, frExternalPerimeter, print_object.config().layer_height).width());
+        const PrintRegion &region    = print_object.printing_region(region_idx);
+        const int          wall_loops = std::max(1, region.config().wall_loops.value);
+        const Flow         ext_flow  = region.flow(print_object, frExternalPerimeter, layer_height);
+        const Flow         int_flow  = region.flow(print_object, frPerimeter, layer_height);
+        const float        depth     = ext_flow.width() + float(wall_loops - 1) * int_flow.spacing() + int_flow.width();
+        max_depth = std::max<float>(max_depth, depth);
     }
 
-    return segmentation_by_painting(print_object, extract_facets_info, num_facets_states, max_external_perimeter_width, 0.f, false, IncludeTopAndBottomLayers::No, throw_on_cancel_callback);
+    return segmentation_by_painting(print_object, extract_facets_info, num_facets_states, max_depth, 0.f, false, IncludeTopAndBottomLayers::No, throw_on_cancel_callback);
 }
 
 } // namespace Slic3r

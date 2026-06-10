@@ -73,6 +73,11 @@ size_t apply_speed_zones(LayerRegionPtrs &regions, const ExPolygons &painted_zon
 
     size_t painted_subpaths = 0;
 
+    // Outer and inner walls are the roles overridden by the G-code speed hook.
+    const auto is_target_wall = [](ExtrusionRole role) {
+        return is_external_perimeter(role) || is_internal_perimeter(role);
+    };
+
     // A LayerRegion's perimeters collection is NOT a flat list of loops: it holds
     // one ExtrusionEntityCollection per island, each containing the loops (and
     // possibly further nested collections / thin-wall paths). We must recurse.
@@ -81,15 +86,15 @@ size_t apply_speed_zones(LayerRegionPtrs &regions, const ExPolygons &painted_zon
             for (ExtrusionEntity *child : coll->entities)
                 visit(child);
         } else if (auto *loop = dynamic_cast<ExtrusionLoop *>(ee)) {
-            bool loop_has_external = false;
+            bool loop_has_target = false;
             for (const ExtrusionPath &p : loop->paths)
-                if (is_external_perimeter(p.role())) { loop_has_external = true; break; }
-            if (!loop_has_external)
+                if (is_target_wall(p.role())) { loop_has_target = true; break; }
+            if (!loop_has_target)
                 return;
             ExtrusionPaths new_paths;
             new_paths.reserve(loop->paths.size());
             for (const ExtrusionPath &p : loop->paths) {
-                if (is_external_perimeter(p.role())) {
+                if (is_target_wall(p.role())) {
                     const size_t before = new_paths.size();
                     split_path_by_zone(p, painted_zones, new_paths);
                     for (size_t i = before; i < new_paths.size(); ++i)
