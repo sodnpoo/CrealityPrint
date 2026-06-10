@@ -536,6 +536,8 @@ set(lisbslic3r_sources
 	GCode/Thumbnails.hpp
     Feature/FuzzySkin/FuzzySkin.cpp
     Feature/FuzzySkin/FuzzySkin.hpp
+    Feature/SurfaceModifier/SurfaceModifier.cpp
+    Feature/SurfaceModifier/SurfaceModifier.hpp
 	Feature/Interlocking/InterlockingGenerator.hpp
     Feature/Interlocking/InterlockingGenerator.cpp
 	Feature/Interlocking/VoxelUtils.hpp
