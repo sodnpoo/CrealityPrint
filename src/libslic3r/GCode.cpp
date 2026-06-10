@@ -8337,9 +8337,9 @@ std::string GCode::_extrude(const ExtrusionPath &path, std::string description, 
     // make_perimeters() and stored on the path, so no coordinate work needed here.
     if (path.surface_modifier_zone) {
         if (path.role() == erExternalPerimeter)
-            speed = 10.0;
+            speed = m_config.surface_modifier_outer_speed.value;
         else if (path.role() == erPerimeter)
-            speed = 30.0;
+            speed = m_config.surface_modifier_inner_speed.value;
     }
 
     double F = speed * 60;  // convert mm/sec to mm/min

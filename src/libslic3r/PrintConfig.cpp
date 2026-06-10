@@ -3674,6 +3674,24 @@ void PrintConfigDef::init_fff_params()
     def->mode     = comAdvanced;
     def->set_default_value(new ConfigOptionFloat(0.));
 
+    def           = this->add("surface_modifier_outer_speed", coFloat);
+    def->label    = L("Painted outer wall speed");
+    def->tooltip  = L("Print speed for outer walls inside a surface-modifier painted region.");
+    def->sidetext = L("mm/s");
+    def->min      = 0;
+    def->category = L("Speed");
+    def->mode     = comAdvanced;
+    def->set_default_value(new ConfigOptionFloat(10.));
+
+    def           = this->add("surface_modifier_inner_speed", coFloat);
+    def->label    = L("Painted inner wall speed");
+    def->tooltip  = L("Print speed for inner walls inside a surface-modifier painted region.");
+    def->sidetext = L("mm/s");
+    def->min      = 0;
+    def->category = L("Speed");
+    def->mode     = comAdvanced;
+    def->set_default_value(new ConfigOptionFloat(30.));
+
     def           = this->add("interlocking_beam", coBool);
     def->label    = L("Use beam interlocking");
     def->tooltip  = L("Generate interlocking beam structure at the locations where different filaments touch. This improves the adhesion between filaments, especially models printed in different materials.");

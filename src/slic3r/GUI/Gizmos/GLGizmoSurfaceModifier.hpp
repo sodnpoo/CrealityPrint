@@ -36,6 +36,13 @@ protected:
 private:
     bool on_init() override;
 
+    // Per-object painted wall speeds (mm/s), mirrored from / written to the
+    // selected ModelObject's config (surface_modifier_outer_speed / _inner_speed).
+    float m_outer_speed = 10.f;
+    float m_inner_speed = 30.f;
+    void  load_speeds_from_object();
+    void  store_speed_to_object(const std::string &opt_key, float value);
+
     void update_model_object() override;
     void update_from_model_object(bool first_update) override;
 

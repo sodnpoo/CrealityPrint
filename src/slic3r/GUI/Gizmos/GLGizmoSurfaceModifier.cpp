@@ -58,6 +58,8 @@ bool GLGizmoSurfaceModifier::on_init()
     m_desc["tool_smart_fill"]                = _L("Smart fill");
     m_desc["smart_fill_angle_caption"]       = ctrl + _L("Mouse wheel");
     m_desc["smart_fill_angle"]               = _L("Smart fill angle");
+    m_desc["outer_speed"]                    = _L("Painted outer wall speed");
+    m_desc["inner_speed"]                    = _L("Painted inner wall speed");
 
     return true;
 }
@@ -319,6 +321,28 @@ void GLGizmoSurfaceModifier::on_render_input_window(float x, float y, float bott
         ImGui::BBLDragFloat("##smart_fill_angle_input", &m_smart_fill_angle, 0.05f, 0.0f, 0.0f, "%.2f");
     }
 
+    // Painted wall speeds (per-object). Written back to the object config on edit end.
+    ImGui::Separator();
+    const float speed_label_width = std::max(m_imgui->calc_text_size(m_desc.at("outer_speed")).x,
+                                             m_imgui->calc_text_size(m_desc.at("inner_speed")).x) + m_imgui->scaled(1.5f);
+    const float speed_input_width = sliders_width + 1.5f * slider_icon_width;
+
+    ImGui::AlignTextToFramePadding();
+    m_imgui->text(m_desc.at("outer_speed"));
+    ImGui::SameLine(speed_label_width);
+    ImGui::PushItemWidth(speed_input_width);
+    ImGui::BBLDragFloat("##sm_outer_speed", &m_outer_speed, 0.5f, 1.f, 1000.f, "%.0f mm/s");
+    if (ImGui::IsItemDeactivatedAfterEdit())
+        store_speed_to_object("surface_modifier_outer_speed", m_outer_speed);
+
+    ImGui::AlignTextToFramePadding();
+    m_imgui->text(m_desc.at("inner_speed"));
+    ImGui::SameLine(speed_label_width);
+    ImGui::PushItemWidth(speed_input_width);
+    ImGui::BBLDragFloat("##sm_inner_speed", &m_inner_speed, 0.5f, 1.f, 1000.f, "%.0f mm/s");
+    if (ImGui::IsItemDeactivatedAfterEdit())
+        store_speed_to_object("surface_modifier_inner_speed", m_inner_speed);
+
     ImGui::Separator();
     if (m_c->object_clipper()->get_position() == 0.f) {
         ImGui::AlignTextToFramePadding();
@@ -411,6 +435,31 @@ void GLGizmoSurfaceModifier::update_from_model_object(bool first_update)
         m_triangle_selectors.back()->deserialize(mv->surface_modifier_facets.get_data(), false);
         m_triangle_selectors.back()->request_update_render_data();
     }
+
+    load_speeds_from_object();
+}
+
+void GLGizmoSurfaceModifier::load_speeds_from_object()
+{
+    // Defaults match the surface_modifier_*_speed config option defaults.
+    m_outer_speed = 10.f;
+    m_inner_speed = 30.f;
+    const ModelObject* mo = m_c->selection_info() ? m_c->selection_info()->model_object() : nullptr;
+    if (mo == nullptr)
+        return;
+    if (mo->config.has("surface_modifier_outer_speed"))
+        m_outer_speed = float(mo->config.opt_float("surface_modifier_outer_speed"));
+    if (mo->config.has("surface_modifier_inner_speed"))
+        m_inner_speed = float(mo->config.opt_float("surface_modifier_inner_speed"));
+}
+
+void GLGizmoSurfaceModifier::store_speed_to_object(const std::string& opt_key, float value)
+{
+    ModelObject* mo = m_c->selection_info() ? m_c->selection_info()->model_object() : nullptr;
+    if (mo == nullptr)
+        return;
+    mo->config.set(opt_key, double(value));
+    m_parent.post_event(SimpleEvent(EVT_GLCANVAS_SCHEDULE_BACKGROUND_PROCESS));
 }
 
 PainterGizmoType GLGizmoSurfaceModifier::get_painter_type() const

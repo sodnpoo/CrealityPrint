@@ -869,6 +869,9 @@ PRINT_CONFIG_CLASS_DEFINE(
     ((ConfigOptionFloat,               msao_safe_velocity))
     ((ConfigOptionFloat,               mmu_segmented_region_max_width))
     ((ConfigOptionFloat,               mmu_segmented_region_interlocking_depth))
+    // Surface modifier painting: print speed (mm/s) for painted outer / inner walls.
+    ((ConfigOptionFloat,               surface_modifier_outer_speed))
+    ((ConfigOptionFloat,               surface_modifier_inner_speed))
     ((ConfigOptionFloat,               raft_contact_distance))
     ((ConfigOptionFloat,               raft_expansion))
     ((ConfigOptionPercent,             raft_first_layer_density))
