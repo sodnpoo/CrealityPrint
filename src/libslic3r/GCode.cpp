@@ -8332,12 +8332,15 @@ std::string GCode::_extrude(const ExtrusionPath &path, std::string description, 
         }       
     }
 
-    // Surface modifier speed override. Zone membership is pre-computed during
+    // Surface modifier speed override. Only painted paths are overridden; unpainted
+    // walls keep their normally-computed speed. Zone membership is pre-computed during
     // make_perimeters() and stored on the path, so no coordinate work needed here.
-    if (path.role() == erExternalPerimeter)
-        speed = path.surface_modifier_zone ? 10.0 : 20.0;
-    else if (path.role() == erPerimeter)
-        speed = path.surface_modifier_zone ? 30.0 : 40.0;
+    if (path.surface_modifier_zone) {
+        if (path.role() == erExternalPerimeter)
+            speed = 10.0;
+        else if (path.role() == erPerimeter)
+            speed = 30.0;
+    }
 
     double F = speed * 60;  // convert mm/sec to mm/min
 
