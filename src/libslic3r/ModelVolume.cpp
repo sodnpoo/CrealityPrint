@@ -31,6 +31,7 @@ void ModelVolume::reset_extra_facets()
     this->seam_facets.reset();
     this->mmu_segmentation_facets.reset();
     this->fuzzy_skin_facets.reset();
+    this->surface_modifier_facets.reset();
 }
 
 static void invalidate_translations(ModelObject* object, const ModelInstance* src_instance)

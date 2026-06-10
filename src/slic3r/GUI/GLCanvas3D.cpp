@@ -1669,10 +1669,11 @@ void GLCanvas3D::toggle_model_objects_visibility(bool visible, const ModelObject
                 } else {
                     const GLGizmosManager& gm         = get_gizmos_manager();
                     auto                   gizmo_type = gm.get_current_type();
-                    if (  (gizmo_type == GLGizmosManager::FdmSupports 
-                        || gizmo_type == GLGizmosManager::Seam 
-                        || gizmo_type == GLGizmosManager::Cut 
-                        || gizmo_type == GLGizmosManager::FuzzySkin) &&
+                    if (  (gizmo_type == GLGizmosManager::FdmSupports
+                        || gizmo_type == GLGizmosManager::Seam
+                        || gizmo_type == GLGizmosManager::Cut
+                        || gizmo_type == GLGizmosManager::FuzzySkin
+                        || gizmo_type == GLGizmosManager::SurfaceModifier) &&
                         !vol->is_modifier) {
                         vol->force_neutral_color = true;
                     }
@@ -2204,7 +2205,8 @@ void GLCanvas3D::render(bool only_init)
         // only_body = true;
         only_current = true;
     } else if ((gizmo_type == GLGizmosManager::FdmSupports) || (gizmo_type == GLGizmosManager::Seam) ||
-               (gizmo_type == GLGizmosManager::MmuSegmentation) || (gizmo_type == GLGizmosManager::FuzzySkin))
+               (gizmo_type == GLGizmosManager::MmuSegmentation) || (gizmo_type == GLGizmosManager::FuzzySkin) ||
+               (gizmo_type == GLGizmosManager::SurfaceModifier))
         no_partplate = true;
     else if (gizmo_type == GLGizmosManager::BrimEars && !camera.is_looking_downward())
         show_grid = false;
@@ -4802,7 +4804,8 @@ void GLCanvas3D::on_mouse(wxMouseEvent& evt)
         m_selection.set_volume_selection_mode(Selection::Instance);
         if (m_gizmos.get_current_type() != GLGizmosManager::FdmSupports && m_gizmos.get_current_type() != GLGizmosManager::Seam &&
             m_gizmos.get_current_type() != GLGizmosManager::Cut && m_gizmos.get_current_type() != GLGizmosManager::MmuSegmentation &&
-            m_gizmos.get_current_type() != GLGizmosManager::FuzzySkin && !is_layers_editing_enabled()) {
+            m_gizmos.get_current_type() != GLGizmosManager::FuzzySkin && m_gizmos.get_current_type() != GLGizmosManager::SurfaceModifier &&
+            !is_layers_editing_enabled()) {
             m_rectangle_selection.start_dragging(m_mouse.position,
                                                  evt.AltDown() ? GLSelectionRectangle::Deselect : GLSelectionRectangle::Select);
             m_dirty = true;
@@ -4840,7 +4843,8 @@ void GLCanvas3D::on_mouse(wxMouseEvent& evt)
                     &&*/ m_gizmos.get_current_type() != GLGizmosManager::FdmSupports &&
                     m_gizmos.get_current_type() != GLGizmosManager::Seam && m_gizmos.get_current_type() != GLGizmosManager::Cut &&
                     m_gizmos.get_current_type() != GLGizmosManager::MmuSegmentation &&
-                    m_gizmos.get_current_type() != GLGizmosManager::FuzzySkin) {
+                    m_gizmos.get_current_type() != GLGizmosManager::FuzzySkin &&
+                    m_gizmos.get_current_type() != GLGizmosManager::SurfaceModifier) {
                     m_rectangle_selection.start_dragging(m_mouse.position, GLSelectionRectangle::Select);
                     m_dirty = true;
                 }
@@ -4977,7 +4981,8 @@ void GLCanvas3D::on_mouse(wxMouseEvent& evt)
                 if (this->m_canvas_type == ECanvasType::CanvasAssembleView || m_gizmos.get_current_type() == GLGizmosManager::FdmSupports ||
                     m_gizmos.get_current_type() == GLGizmosManager::Seam ||
                     m_gizmos.get_current_type() == GLGizmosManager::MmuSegmentation ||
-                    m_gizmos.get_current_type() == GLGizmosManager::FuzzySkin) {
+                    m_gizmos.get_current_type() == GLGizmosManager::FuzzySkin ||
+                    m_gizmos.get_current_type() == GLGizmosManager::SurfaceModifier) {
                     Camera& camera        = wxGetApp().plater()->get_camera();
                     Vec3d   rotate_target = Vec3d::Zero();
                     if (!m_selection.is_empty())
@@ -8901,6 +8906,22 @@ bool GLCanvas3D::_init_main_toolbar()
     }
 
     {
+        GLGizmoBase* obj = m_gizmos.get_gizmo(GLGizmosManager::EType::SurfaceModifier);
+        if (obj) {
+            item.name          = obj->get_name(false);
+            item.icon_filename = obj->get_icon_filename();
+            item.tooltip       = obj->get_name(true);
+            item.sprite_id++;
+
+            item.enabling_callback    = [obj]() -> bool { return obj->is_activable(); };
+            item.left.action_callback = [this]() { m_gizmos.open_gizmo(GLGizmosManager::EType::SurfaceModifier); };
+            item.visibility_callback  = [obj]() -> bool { return true; };
+            if (!m_main_toolbar.add_item(item))
+                return false;
+        }
+    }
+
+    {
         GLGizmoBase* obj = m_gizmos.get_gizmo(GLGizmosManager::EType::BrimEars);
         if (obj) {
             item.name          = obj->get_name(false);
@@ -10169,7 +10190,8 @@ void GLCanvas3D::_render_cliper(int canvas_width, int canvas_height)
 
     GLGizmosManager::EType gizmo_type = m_gizmos.get_current_type();
     if ((gizmo_type == GLGizmosManager::FdmSupports) || (gizmo_type == GLGizmosManager::Seam) ||
-        (gizmo_type == GLGizmosManager::MmuSegmentation) || (gizmo_type == GLGizmosManager::FuzzySkin))
+        (gizmo_type == GLGizmosManager::MmuSegmentation) || (gizmo_type == GLGizmosManager::FuzzySkin) ||
+        (gizmo_type == GLGizmosManager::SurfaceModifier))
         return;
 
     IMSlider* cliper_slide = m_gcode_viewer.get_cliper_slider();

@@ -1579,6 +1579,13 @@ bool model_fuzzy_skin_data_changed(const ModelObject &mo, const ModelObject &mo_
         [](const ModelVolume &mv_old, const ModelVolume &mv_new){ return mv_old.fuzzy_skin_facets.timestamp_matches(mv_new.fuzzy_skin_facets); });
 }
 
+bool model_surface_modifier_data_changed(const ModelObject &mo, const ModelObject &mo_new)
+{
+    return model_property_changed(mo, mo_new,
+        [](const ModelVolumeType t) { return t == ModelVolumeType::MODEL_PART; },
+        [](const ModelVolume &mv_old, const ModelVolume &mv_new){ return mv_old.surface_modifier_facets.timestamp_matches(mv_new.surface_modifier_facets); });
+}
+
 bool model_brim_points_data_changed(const ModelObject& mo, const ModelObject& mo_new)
 {
     if (mo.brim_points.size() != mo_new.brim_points.size())

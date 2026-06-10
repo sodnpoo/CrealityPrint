@@ -206,6 +206,8 @@ public:
 
     // Set only for external and internal perimeters. The external perimeter has value 0, the first internal perimeter has 1, and so on.
     std::optional<uint16_t> perimeter_index;
+    // Set true when this path lies within a surface-modifier painted zone (used for per-path speed override).
+    bool surface_modifier_zone = false;
 
     ExtrusionPath() : mm3_per_mm(-1), width(-1), height(-1), m_role(erNone), m_no_extrusion(false) {}
     ExtrusionPath(ExtrusionRole role) : mm3_per_mm(-1), width(-1), height(-1), m_role(role), m_no_extrusion(false) {}
@@ -235,6 +237,7 @@ public:
         , height(rhs.height)
         , perimeter_index(rhs.perimeter_index)
         , smooth_speed(rhs.smooth_speed)
+        , surface_modifier_zone(rhs.surface_modifier_zone)
         , m_can_reverse(rhs.m_can_reverse)
         , m_role(rhs.m_role)
         , m_no_extrusion(rhs.m_no_extrusion)
@@ -248,6 +251,7 @@ public:
         , height(rhs.height)
         , perimeter_index(rhs.perimeter_index)
         , smooth_speed(rhs.smooth_speed)
+        , surface_modifier_zone(rhs.surface_modifier_zone)
         , m_can_reverse(rhs.m_can_reverse)
         , m_role(rhs.m_role)
         , m_no_extrusion(rhs.m_no_extrusion)
@@ -261,6 +265,7 @@ public:
         , height(rhs.height)
         , perimeter_index(rhs.perimeter_index)
         , smooth_speed(rhs.smooth_speed)
+        , surface_modifier_zone(rhs.surface_modifier_zone)
         , m_can_reverse(rhs.m_can_reverse)
         , m_role(rhs.m_role)
         , m_no_extrusion(rhs.m_no_extrusion)
@@ -274,6 +279,7 @@ public:
         , height(rhs.height)
         , perimeter_index(rhs.perimeter_index)
         , smooth_speed(rhs.smooth_speed)
+        , surface_modifier_zone(rhs.surface_modifier_zone)
         , m_can_reverse(rhs.m_can_reverse)
         , m_role(rhs.m_role)
         , m_no_extrusion(rhs.m_no_extrusion)
@@ -290,6 +296,7 @@ public:
         this->smooth_speed = rhs.smooth_speed;
         this->overhang_degree = rhs.overhang_degree;
         this->curve_degree = rhs.curve_degree;
+        this->surface_modifier_zone = rhs.surface_modifier_zone;
         this->polyline = rhs.polyline;
         return *this;
     }
@@ -304,6 +311,7 @@ public:
         this->smooth_speed    = rhs.smooth_speed;
         this->overhang_degree = rhs.overhang_degree;
         this->curve_degree = rhs.curve_degree;
+        this->surface_modifier_zone = rhs.surface_modifier_zone;
         this->polyline = std::move(rhs.polyline);
         return *this;
     }

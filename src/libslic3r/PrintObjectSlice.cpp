@@ -1053,6 +1053,34 @@ static inline void apply_mm_segmentation(PrintObject &print_object, ThrowOnCance
 }
 
 template<typename ThrowOnCancel>
+void apply_surface_modifier_segmentation(PrintObject &print_object, ThrowOnCancel throw_on_cancel)
+{
+    // Compute per-layer painted zones from the surface modifier painting gizmo.
+    // Store them on each Layer for later use by the G-code speed override in GCode::_extrude().
+    // We do NOT split layer geometry here — that would create extra walls.
+    std::vector<std::vector<ExPolygons>> segmentation = surface_modifier_segmentation_by_painting(print_object, throw_on_cancel);
+    assert(segmentation.size() == print_object.layer_count());
+
+    // The output of segmentation_by_painting() is passed through merge_segmented_layers(),
+    // which sizes each layer to (num_facets_states - 1) and maps painted state 1 -> index [0].
+    // With num_facets_states == 2 (unpainted + surface-modifier), each layer holds exactly
+    // one ExPolygons set: the painted zone, at index [0]. This matches fuzzy skin.
+    size_t painted_layers = 0;
+    double total_painted_area_mm2 = 0.;
+    for (size_t layer_idx = 0; layer_idx < segmentation.size(); ++layer_idx) {
+        if (segmentation[layer_idx].empty() || segmentation[layer_idx][0].empty())
+            continue;
+        ExPolygons &painted = segmentation[layer_idx][0];
+        ++painted_layers;
+        for (const ExPolygon &ex : painted)
+            total_painted_area_mm2 += unscaled(unscaled(ex.area()));
+        print_object.get_layer(int(layer_idx))->surface_modifier_painted = std::move(painted);
+    }
+    BOOST_LOG_TRIVIAL(info) << "Surface modifier segmentation: " << painted_layers << "/" << segmentation.size()
+                            << " layers have painted zones, total area " << total_painted_area_mm2 << " mm^2";
+}
+
+template<typename ThrowOnCancel>
 void apply_fuzzy_skin_segmentation(PrintObject &print_object, ThrowOnCancel throw_on_cancel)
 {
     // Returns fuzzy skin segmentation based on painting in the fuzzy skin painting gizmo.
@@ -1298,6 +1326,12 @@ void PrintObject::slice_volumes()
 
         BOOST_LOG_TRIVIAL(debug) << "Slicing volumes - Fuzzy skin segmentation";
         apply_fuzzy_skin_segmentation(*this, [print]() { print->throw_if_canceled(); });
+    }
+
+    // Is any ModelVolume surface-modifier painted?
+    if (this->model_object()->is_surface_modifier_painted()) {
+        BOOST_LOG_TRIVIAL(debug) << "Slicing volumes - Surface modifier segmentation";
+        apply_surface_modifier_segmentation(*this, [print]() { print->throw_if_canceled(); });
     }
 
    // begin_debug_concial_overhang(m_print, this);

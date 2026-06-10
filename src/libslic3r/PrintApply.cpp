@@ -85,6 +85,8 @@ static inline void model_volume_list_copy_configs(ModelObject &model_object_dst,
         mv_dst.mmu_segmentation_facets.assign(mv_src.mmu_segmentation_facets);
         assert(mv_dst.fuzzy_skin_facets.id() == mv_src.fuzzy_skin_facets.id());
         mv_dst.fuzzy_skin_facets.assign(mv_src.fuzzy_skin_facets);
+        assert(mv_dst.surface_modifier_facets.id() == mv_src.surface_modifier_facets.id());
+        mv_dst.surface_modifier_facets.assign(mv_src.surface_modifier_facets);
         //FIXME what to do with the materials?
         // mv_dst.m_material_id = mv_src.m_material_id;
         ++ i_src;
@@ -1583,7 +1585,8 @@ Print::ApplyStatus Print::apply(const Model &model, DynamicPrintConfig new_full_
         bool solid_or_modifier_differ   = model_volume_list_changed(model_object, model_object_new, solid_or_modifier_types) ||
                                           model_mmu_segmentation_data_changed(model_object, model_object_new) ||
                                           (model_object_new.is_mm_painted() && num_extruders_changed ) ||
-                                          model_fuzzy_skin_data_changed(model_object, model_object_new);
+                                          model_fuzzy_skin_data_changed(model_object, model_object_new) ||
+                                          model_surface_modifier_data_changed(model_object, model_object_new);
         bool supports_differ            = model_volume_list_changed(model_object, model_object_new, ModelVolumeType::SUPPORT_BLOCKER) ||
                                           model_volume_list_changed(model_object, model_object_new, ModelVolumeType::SUPPORT_ENFORCER);
         bool layer_height_ranges_differ = ! layer_height_ranges_equal(model_object.layer_config_ranges, model_object_new.layer_config_ranges, model_object_new.layer_height_profile.empty());
@@ -1687,8 +1690,8 @@ Print::ApplyStatus Print::apply(const Model &model, DynamicPrintConfig new_full_
 	        	auto new_instance = model_object_new.instances.begin();
 				for (auto old_instance = model_object.instances.begin(); old_instance != model_object.instances.end(); ++ old_instance, ++ new_instance) 
                 {
-                    //Èç¹û·¢ÉúÁËÒÆ¶¯µÈ±ä»»£¬ÐèÒªÈÃÖ§³ÅÖØÐÂ¼ÆËã
-                    //¼ûbug https://zentao.creality.com/zentao/bug-view-14157.html
+                    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½È±ä»»ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½Ö§ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½
+                    //ï¿½ï¿½bug https://zentao.creality.com/zentao/bug-view-14157.html
                     bool is_transform = !((*old_instance)->get_transformation().get_matrix().isApprox((*new_instance)->get_transformation().get_matrix()));
                      if (is_transform)
                      {

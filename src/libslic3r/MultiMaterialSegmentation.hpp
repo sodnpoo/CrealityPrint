@@ -52,6 +52,9 @@ std::vector<std::vector<ExPolygons>> multi_material_segmentation_by_painting(con
 // Returns fuzzy skin segmentation based on painting in fuzzy skin segmentation gizmo
 std::vector<std::vector<ExPolygons>> fuzzy_skin_segmentation_by_painting(const PrintObject &print_object, const std::function<void()> &throw_on_cancel_callback);
 
+// Returns surface modifier segmentation based on painting in surface modifier gizmo
+std::vector<std::vector<ExPolygons>> surface_modifier_segmentation_by_painting(const PrintObject &print_object, const std::function<void()> &throw_on_cancel_callback);
+
 } // namespace Slic3r
 
 namespace boost::polygon {

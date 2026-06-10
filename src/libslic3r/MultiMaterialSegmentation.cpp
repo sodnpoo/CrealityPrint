@@ -2368,4 +2368,21 @@ std::vector<std::vector<ExPolygons>> fuzzy_skin_segmentation_by_painting(const P
     return segmentation_by_painting(print_object, extract_facets_info, num_facets_states, max_external_perimeter_width, 0.f, false, IncludeTopAndBottomLayers::No, throw_on_cancel_callback);
 }
 
+std::vector<std::vector<ExPolygons>> surface_modifier_segmentation_by_painting(const PrintObject &print_object, const std::function<void()> &throw_on_cancel_callback) {
+    const size_t num_facets_states = 2; // Unpainted and painted-with-surface-modifier.
+
+    const auto extract_facets_info = [](const ModelVolume &mv) -> ModelVolumeFacetsInfo {
+        return {mv.surface_modifier_facets, mv.is_surface_modifier_painted(), false};
+    };
+
+    // Use a small depth so the painted region projects onto the surface shell only.
+    float max_external_perimeter_width = 0.;
+    for (size_t region_idx = 0; region_idx < print_object.num_printing_regions(); ++region_idx) {
+        const PrintRegion &region = print_object.printing_region(region_idx);
+        max_external_perimeter_width = std::max<float>(max_external_perimeter_width, region.flow(print_object, frExternalPerimeter, print_object.config().layer_height).width());
+    }
+
+    return segmentation_by_painting(print_object, extract_facets_info, num_facets_states, max_external_perimeter_width, 0.f, false, IncludeTopAndBottomLayers::No, throw_on_cancel_callback);
+}
+
 } // namespace Slic3r

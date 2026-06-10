@@ -448,6 +448,8 @@ public:
     bool                        is_mm_painted()         const { return this->model_object()->is_mm_painted(); }
     // Checks if the model object is painted using the fuzzy skin painting gizmo.
     bool                        is_fuzzy_skin_painted() const { return this->model_object()->is_fuzzy_skin_painted(); }
+    // Checks if the model object is painted using the surface modifier painting gizmo.
+    bool                        is_surface_modifier_painted() const { return this->model_object()->is_surface_modifier_painted(); }
 
     // returns 0-based indices of extruders used to print the object (without brim, support and other helper extrusions)
     std::vector<unsigned int>   object_extruders() const;

@@ -311,6 +311,8 @@ extern bool model_mmu_segmentation_data_changed(const ModelObject& mo, const Mod
 // Test whether the now ModelObject has newer fuzzy skin data than the old one.
 // The function assumes that volumes list is synchronized.
 extern bool model_fuzzy_skin_data_changed(const ModelObject &mo, const ModelObject &mo_new);
+// Test whether the now ModelObject has newer surface modifier painting data than the old one.
+extern bool model_surface_modifier_data_changed(const ModelObject &mo, const ModelObject &mo_new);
 bool model_brim_points_data_changed(const ModelObject& mo, const ModelObject& mo_new);
 
 // If the model has multi-part objects, then it is currently not supported by the SLA mode.
