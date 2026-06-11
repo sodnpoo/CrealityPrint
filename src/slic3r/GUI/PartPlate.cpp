@@ -2804,6 +2804,7 @@ bool PartPlate::set_shape(const Pointfs& shape, const Pointfs& exclude_areas, Ve
 		m_exclude_area = std::move(new_exclude_areas);
 		calc_bounding_boxes();
 
+		if (m_plater != nullptr) { // render data, skip in CLI mode where m_plater is null
 		ExPolygon logo_poly;
 		generate_logo_polygon(logo_poly);
 		m_logo_triangles.reset();
@@ -2833,6 +2834,7 @@ bool PartPlate::set_shape(const Pointfs& shape, const Pointfs& exclude_areas, Ve
 		calc_vertex_for_number(false, m_plate_idx_icon);
 
         generate_plate_name_texture();
+		}
 	}
 
 	calc_height_limit();
@@ -5044,7 +5046,9 @@ bool PartPlateList::set_shapes(const Pointfs& shape, const Pointfs& exclude_area
 		pos = compute_shape_position(i, m_plate_cols);
 		plate->set_shape(shape, exclude_areas, pos, height_to_lid, height_to_rod);
 	}
-	set_verder_type(wxGetApp().preset_bundle->get_current_vendor_type());
+	// render-related state, skip in CLI mode where m_plater is null (wxGetApp() is then a null reference)
+	if (m_plater != nullptr)
+		set_verder_type(wxGetApp().preset_bundle->get_current_vendor_type());
 	calc_bounding_boxes();
 
 	update_logo_texture_filename(texture_filename);
