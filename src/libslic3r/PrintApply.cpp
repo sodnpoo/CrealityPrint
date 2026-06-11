@@ -1690,8 +1690,8 @@ Print::ApplyStatus Print::apply(const Model &model, DynamicPrintConfig new_full_
 	        	auto new_instance = model_object_new.instances.begin();
 				for (auto old_instance = model_object.instances.begin(); old_instance != model_object.instances.end(); ++ old_instance, ++ new_instance) 
                 {
-                    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½È±ä»»ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½Ö§ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½
-                    //ï¿½ï¿½bug https://zentao.creality.com/zentao/bug-view-14157.html
+                    //Èç¹û·¢ÉúÁËÒÆ¶¯µÈ±ä»»£¬ÐèÒªÈÃÖ§³ÅÖØÐÂ¼ÆËã
+                    //¼ûbug https://zentao.creality.com/zentao/bug-view-14157.html
                     bool is_transform = !((*old_instance)->get_transformation().get_matrix().isApprox((*new_instance)->get_transformation().get_matrix()));
                      if (is_transform)
                      {

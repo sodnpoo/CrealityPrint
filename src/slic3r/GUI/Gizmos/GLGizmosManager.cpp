@@ -396,7 +396,7 @@ void GLGizmosManager::update_data()
 
     if (m_pending_update) {
         m_pending_update = false;
-        // return; // 锟斤拷锟斤拷锟斤拷蔷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟揭伙拷锟絩eturn锟斤拷锟饺达拷锟铰达拷update锟劫革拷锟斤拷锟斤拷锟捷★拷
+        // return; // 如果还是经常崩溃，这里增加一个return，等待下次update再更新数据。
     }
 
     if (m_common_gizmos_data)
