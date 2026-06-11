@@ -1358,6 +1358,10 @@ bool PrintObject::invalidate_state_by_config_options(
             || opt_key == "inner_wall_speed"
             || opt_key == "internal_solid_infill_speed"
             || opt_key == "top_surface_speed"
+            // Surface-modifier painted wall speeds are applied in GCode::_extrude only;
+            // the perimeter zone split does not depend on their value, so re-export suffices.
+            || opt_key == "surface_modifier_outer_speed"
+            || opt_key == "surface_modifier_inner_speed"
             || opt_key == "bed_mesh_min"
             || opt_key == "bed_mesh_max"
             || opt_key == "adaptive_bed_mesh_margin"
