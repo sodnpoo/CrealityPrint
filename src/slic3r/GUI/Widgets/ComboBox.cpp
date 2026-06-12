@@ -291,14 +291,15 @@ public:
 void ComboBox::mouseDown(wxMouseEvent &event)
 {
     SetFocus();
+    if (!IsEnabled()) { return; } /*on mac, the event may triggered even disabled*/
     if (drop_down) {
         drop.Hide();
     } else if (drop.HasDismissLongTime()) {
         drop.autoPosition();
         drop_down = true;
         //drop.Raise();
-        drop.Popup();
-        
+        drop.Popup(&drop);
+
         wxCommandEvent e(wxEVT_COMBOBOX_DROPDOWN);
         GetEventHandler()->ProcessEvent(e);
     }

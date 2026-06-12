@@ -203,6 +203,11 @@ void TextInput::DoSetSize(int x, int y, int width, int height, int sizeFlags)
     if (text_ctrl) {
         wxSize textSize = text_ctrl->GetSize();
         textSize.x      = size.x - textPos.x - labelSize.x - m_LeftMargin * 2;
+        // Orca: clamp to -1 ("no constraint") so a too-narrow / not-yet-laid-out
+        // control never feeds a negative width to gtk_widget_set_size_request(),
+        // which rejects it and leaves the inner text control mis-sized — the root
+        // of the GTK 'width >= -1' flood and the unclickable filament fields.
+        if (textSize.x < -1) textSize.x = -1;
         text_ctrl->SetSize(textSize);
         text_ctrl->SetPosition({textPos.x, (size.y - textSize.y) / 2});
     }

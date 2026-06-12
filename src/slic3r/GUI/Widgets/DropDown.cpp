@@ -351,10 +351,17 @@ void DropDown::messureSize()
     if (iconSize.x > 0) szContent.x += iconSize.x + (text_off ? 0 : 5);
     if (iconSize.y > szContent.y) szContent.y = iconSize.y;
     szContent.y += 10;
+    // Orca: enforce a minimum content width so a text-less / not-yet-laid-out
+    // dropdown never degenerates to a zero/tiny width.
+    if (szContent.x < FromDIP(120) && !use_content_width)
+        szContent.x = FromDIP(120);
     if (texts.size() > 15) szContent.x += 6;
     if (GetParent()) {
         auto x = GetParent()->GetSize().x;
-        if (!use_content_width || x > szContent.x)
+        // Orca: only adopt the parent width when it is valid (>0). Adopting a
+        // zero parent width here produced a zero-width popup that still grabbed
+        // the pointer in ComboBox::mouseDown() and froze all mouse input.
+        if (x > 0 && (!use_content_width || x > szContent.x))
             szContent.x = x;
     }
     rowSize = szContent;
@@ -365,12 +372,19 @@ void DropDown::messureSize()
             szContent = rowSize;
         }
     }
-    szContent.y *= std::min((size_t)15, texts.size());
+    // Guard against an empty dropdown (texts.size()==0) producing a zero height,
+    // which makes the GTK gtk_window_resize() below fail ('height > 0' assertion)
+    // and leaves a zero-sized popup that grabs the mouse and swallows input on GTK.
+    // Matches upstream Orca, which clamps the row count to at least 1.
+    szContent.y *= std::min((size_t)15, std::max(texts.size(), (size_t)1));
     szContent.y += texts.size() > 15 ? rowSize.y / 2 : 0;
     wxWindow::SetSize(szContent);
 #ifdef __WXGTK__
     // Gtk has a wrapper window for popup widget
-    gtk_window_resize (GTK_WINDOW (m_widget), szContent.x, szContent.y);
+    // Orca: never resize to a degenerate size — gtk_window_resize() asserts on
+    // width/height <= 0 and leaves a zero-sized popup that grabs and sticks.
+    if (szContent.x > 0 && szContent.y > 0)
+        gtk_window_resize (GTK_WINDOW (m_widget), szContent.x, szContent.y);
 #endif
     need_sync = false;
 }
@@ -385,7 +399,7 @@ void DropDown::autoPosition()
     Position(pos, {0, GetParent()->GetSize().y + 12 - 6 + m_drapDownGap});
     if (old != GetPosition()) {
         size = rowSize;
-        size.y *= std::min((size_t)15, texts.size());
+        size.y *= std::min((size_t)15, std::max(texts.size(), (size_t)1));
         size.y += texts.size() > 15 ? rowSize.y / 2 : 0;
         if (size != GetSize()) {
             wxWindow::SetSize(size);
